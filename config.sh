@@ -7,4 +7,4 @@ aws sts assume-role --role-arn arn:aws:iam::$accountid:role/$rolename --role-ses
 )
 )
 aws sts get-caller-identity
-aws s3 ls
+aws s3api list-buckets 
