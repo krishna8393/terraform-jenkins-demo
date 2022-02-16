@@ -1,9 +1,6 @@
 provider "aws" {
   version = ">= 3.7.0"
-  region  = "ap-south-1" #update the region
-  assume_role {
-    role_arn = "arn:aws:iam::${var.accountid}:role/LambdaExecutionRoleForConfig"
-  }
+  region  = var.region
 }
 
 resource "aws_vpc" "main" {
