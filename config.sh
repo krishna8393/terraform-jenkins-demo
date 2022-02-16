@@ -7,5 +7,5 @@ aws sts assume-role --role-arn arn:aws:iam::$accountid:role/$rolename --role-ses
 )
 )
 terraform init
-terraform plan -var 'region=$region'
-terraform apply -var 'region=$region' --auto-approve
+terraform plan
+terraform apply --auto-approve
