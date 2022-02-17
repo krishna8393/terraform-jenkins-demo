@@ -7,7 +7,7 @@ aws sts assume-role --role-arn arn:aws:iam::$accountid:role/$rolename --role-ses
 )
 )
 
-python3 main.py
+python3 ../shell/main.py
 
 # terraform init
 # terraform plan
