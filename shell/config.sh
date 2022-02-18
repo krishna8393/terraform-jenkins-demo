@@ -7,7 +7,7 @@ aws sts assume-role --role-arn arn:aws:iam::$accountid:role/$rolename --role-ses
 )
 )
 
-python3 /var/lib/jenkins/workspace/terraform/bin/main.py $instance_ids
+python3 /var/lib/jenkins/workspace/terraform/bin/main.py $instance_ids $region
 
 # terraform init
 # terraform plan
