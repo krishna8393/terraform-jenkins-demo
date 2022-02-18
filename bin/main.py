@@ -1,4 +1,4 @@
-# import boto3
+# import 
 # client = boto3.client('iam')
 # def lambda_handler():
 #     response = client.get_role(
@@ -14,7 +14,7 @@ import json
 import time
 import sys
 
-client = boto3.client('ec2')
+client = boto3.client('ec2', region_name=region)
 # snapshot = ec2.Snapshot('id')
 def lambda_handler(instance_ids):
     print('instance_ids', instance_ids)
