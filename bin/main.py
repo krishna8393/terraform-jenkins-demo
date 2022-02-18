@@ -14,6 +14,7 @@ import json
 import time
 import sys
 
+region = sys.argv[2]
 client = boto3.client('ec2', region_name=region)
 # snapshot = ec2.Snapshot('id')
 def lambda_handler(instance_ids):
