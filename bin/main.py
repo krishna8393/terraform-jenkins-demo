@@ -1,8 +1,7 @@
 import boto3
 client = boto3.client('iam')
 def lambda_handler():
-    response = client.create_user(
-    Path='/',
+    response = client.get_user(
     UserName='terraform')
     print('response', response)
  
