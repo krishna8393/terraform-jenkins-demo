@@ -1,8 +1,8 @@
 import boto3
 client = boto3.client('iam')
 def lambda_handler():
-    response = client.get_user(
-    UserName='EKS_Creator')
+    response = client.get_role(
+    RoleName='jenkins_slave')
     print('response', response)
  
 if __name__ == "__main__":
