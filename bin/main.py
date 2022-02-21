@@ -1,60 +1,52 @@
-# import 
-# client = boto3.client('iam')
-# def lambda_handler():
-#     response = client.get_role(
-#     RoleName='jenkins_slave')
-#     print('response', response)
- 
-# if __name__ == "__main__":
-#     lambda_handler()
-#!/usr/bin/env python
-
-import boto3
 import json
-import time
-import sys
+import boto3
+import logging
+import os
 
-region = sys.argv[2]
-client = boto3.client('ec2', region_name=region)
-# snapshot = ec2.Snapshot('id')
-def lambda_handler(instance_ids):
-    print('instance_ids', instance_ids)
-    for instance in instance_ids:
-        snapshot = client.create_snapshots(
-        Description ='take snapshot for all the provided instances',
-        InstanceSpecification={
-            'InstanceId': instance,
-            'ExcludeBootVolume': False
-        }
-        )
-        # snapshot_id=snapshot['Snapshots'][0]['SnapshotId']
-        snapshotids = get_snapshot_ids(snapshot['Snapshots'])
-        for snapshot_id in snapshotids:
-            print('snapshot_id', snapshot_id)
-            status= check_status(snapshot_id)
-            print('status', status)
-            while status != "completed":
-                print(status)
-                time.sleep(5)
-                status= check_status(snapshot_id)
-    print('status', status)
+LOGGER = logging.getLogger()
+LOGGER.setLevel(os.getenv('LOGLEVEL', logging.INFO))
 
-def check_status(snapshot_id):
-    snapshot_status = client.describe_snapshots(
-    SnapshotIds=[snapshot_id])
-    status=snapshot_status['Snapshots'][0]['State']
-    return status
+def lambda_handler(event, context):
 
-def get_snapshot_ids(snapshots):
-    snapshotids = []
-    for snapshot in snapshots:
-        snapshotids.append(snapshot['SnapshotId'])
-    return snapshotids
-
-
-if __name__ == "__main__":
-    print('programname', sys.argv[0])
-    # n = len(sys.argv[1])
-    instance_ids = sys.argv[1].split(',')
-    print('instance_ids', instance_ids)
-    lambda_handler(instance_ids)
+    session = boto3.Session()
+    LOGGER.info(f'Event: {event}')
+    SERVICE_CODE = event['SERVICE_CODE']
+    QUOTAS_CODE = event['QUOTAS_CODE']
+    DESIRED_LIMIT = event['DESIRED_LIMIT']
+    REGION_LIST = event['REGION']
+    
+    # client = boto3.client('service-quotas')
+    try:
+        for region in REGION_LIST:
+            client = session.client(
+                'service-quotas',
+                region_name=region
+            )
+            default_val = client.get_aws_default_service_quota(
+                ServiceCode=SERVICE_CODE,
+                QuotaCode=QUOTAS_CODE
+                )
+            default_value = default_val['Quota']['Value']
+            
+            response = client.get_service_quota(
+                ServiceCode = SERVICE_CODE,
+                QuotaCode = QUOTAS_CODE
+                )
+            current_value = response['Quota']['Value']
+            
+            if(current_value >= default_value and DESIRED_LIMIT > current_value):
+                response = client.request_service_quota_increase(
+                    ServiceCode=SERVICE_CODE,
+                    QuotaCode=QUOTAS_CODE,
+                    DesiredValue=int(DESIRED_LIMIT),
+                    )
+                if response['ResponseMetadata']['HTTPStatusCode'] == 200:
+                    LOGGER.info(f'Successfully requested service limit increase for AWS account '+region)
+                else:
+                    LOGGER.error(f'Failed to successfully request a service limit increase for AWS account')
+            elif(DESIRED_LIMIT == current_value):
+                print('EIP Desired Value limit and Current value is equal in region:'+region+', Kindly provide higher Desire value to increase quota')
+            elif(DESIRED_LIMIT < current_value):
+                print('Privoided EIP limit is lesser than current value in region:'+region+', Kindly provide higher Desired value to increase quota.')
+    except Exception as e:
+        LOGGER.error(f'Error requesting service limit increase: {e}')
